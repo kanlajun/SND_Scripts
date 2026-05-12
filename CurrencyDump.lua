@@ -160,6 +160,22 @@ function GoToAlliedTurnIn()
     end
 end
 
+function GoToCenturioTurnIn()
+    local currentZone = Svc.ClientState.TerritoryType
+    local dist = GetDistanceToPoint(CenturioTurnIn.x,CenturioTurnIn.y,CenturioTurnIn.z)
+    if currentZone ~= CenturioTurnIn.zoneId then
+        Teleport("Forgotten Knight")
+    elseif dist > 5 then
+        if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            yield("/gaction sprint")
+            IPC.vnavmesh.PathfindAndMoveTo(Vector3(CenturioTurnIn.x,CenturioTurnIn.y,CenturioTurnIn.z), false)
+        end
+    elseif State ~= CharacterState.spendCenturio then
+        State = CharacterState.spendCenturio
+        _LOGGER("Buying "..CenturioTurnIn.itemName.." with Centurio Seals")
+    end
+end
+
 function GoToPoeticTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
     local dist = GetDistanceToPoint(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z)
@@ -198,6 +214,12 @@ end
 
 function SpendAllied()
     _LOGGER("WIP spend allied")
+    yield("/wait 3")
+    State = CharacterState.goToPoeticTurnIn
+end
+
+function SpendCenturio()
+    _LOGGER("WIP spend centurio")
     yield("/wait 3")
     State = CharacterState.goToPoeticTurnIn
 end
@@ -379,13 +401,29 @@ function Sell()
 end
 
 function Ready()
-    if Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price
-    or Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price
-    or Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price
-    or Inventory.GetItemCount(PoeticTurnIn.itemId) >= 0 then
+    if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.AlliedSeals) > AlliedTurnIn.price then
+        _LOGGER("Less than 999 "..CenturioTurnIn.itemName.." and more than "..AlliedTurnIn.price.." Allied Seals... Heading to Allied Seals vendor.")
         State = CharacterState.goToAlliedTurnIn
+    elseif Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
+        _LOGGER("Less than 999 "..CenturioTurnIn.itemName.." and more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Allied Seals vendor.")
+        State = CharacterState.goToCenturioTurnIn
+    elseif Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price then
+        _LOGGER("More than "..PoeticTurnIn.price.." Poetics... Heading to Poetic vendor to purchase "..PoeticTurnIn.itemName..".")
+        State = CharacterState.goToPoeticTurnIn
+    elseif Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price then
+        _LOGGER("More than "..ScripTurnIn.Orange.price.." Orange Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Orange.itemName..".")
+        State = CharacterState.goToScripTurnIn
+    elseif Inventory.GetItemCount(ScripTurnIn.Purple[1].itemId) < 999 and Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[1].price then
+        _LOGGER("Less than 999 "..ScripTurnIn.Purple[1].itemName.." and more than"..ScripTurnIn.Purple[1].price" Purple Gatherer's Scrips... Heading to Scrip vendor.")
+        State = CharacterState.goToScripTurnIn
+    elseif Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price then
+        _LOGGER("More than "..ScripTurnIn.Purple[2].price.." Purple Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Purple[2].itemName..".")
+        State = CharacterState.goToScripTurnIn
+    elseif Inventory.GetItemCount(PoeticTurnIn.itemId) >= 0 then
+        _LOGGER("We have some Goblinol... Heading to sell WIP.")
+        State = CharacterState.sell
     else
-        _LOGGER("Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
+        _LOGGER("Nothing to do...")
         StopFlag = true
     end
 end
@@ -434,16 +472,18 @@ CharacterCondition = {
 
 CharacterState =
 {
-    ready            = Ready,
-    goToAlliedTurnIn = GoToAlliedTurnIn,
-    goToPoeticTurnIn = GoToPoeticTurnIn,
-    goToScripTurnIn  = GoToScripTurnIn,
-    spendAllied      = SpendAllied,
-    spendPoetics     = SpendPoetics,
-    spendOrange      = SpendOrange,
-    spendPurple      = SpendPurple,
-    sell             = Sell,
-    turnIn           = TurnIn
+    ready              = Ready,
+    goToAlliedTurnIn   = GoToAlliedTurnIn,
+    goToCenturioTurnIn = GoToCenturioTurnIn,
+    goToPoeticTurnIn   = GoToPoeticTurnIn,
+    goToScripTurnIn    = GoToScripTurnIn,
+    spendAllied        = SpendAllied,
+    spendCenturio      = SpendCenturio,
+    spendPoetics       = SpendPoetics,
+    spendOrange        = SpendOrange,
+    spendPurple        = SpendPurple,
+    sell               = Sell,
+    turnIn             = TurnIn
 }
 
 
