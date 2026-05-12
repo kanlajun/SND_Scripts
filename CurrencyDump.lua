@@ -154,6 +154,7 @@ function GoToAlliedTurnIn()
         Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName)
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            yield("/wait 5")
             yield("/gaction sprint")
             IPC.vnavmesh.PathfindAndMoveTo(AlliedTurnIn.GC[Player.GrandCompany].position, false)
         end
@@ -170,7 +171,7 @@ function GoToCenturioTurnIn()
         Teleport("Forgotten Knight")
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
-            yield("/wait 3")
+            yield("/wait 5")
             yield("/gaction sprint")
             IPC.vnavmesh.PathfindAndMoveTo(CenturioTurnIn.position, false)
         end
