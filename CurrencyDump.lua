@@ -1,0 +1,441 @@
+--[[
+********************************************************************************
+*                  Currency Dump - Buy Goblinol and other things               *
+*                                Version 0.0.1                                 *
+********************************************************************************
+
+Created by: 
+Based on: Dump Poetics by pot0to (https://ko-fi.com/pot0to)
+
+Description: Spends all your poetics on Goblinol, OGS on Mount Tokens, buys up
+to 999 Hi-Cordial with PGS, and then spends the rest on Guile Materia XI. Will
+eventually spend other currencies on stuff too. 
+
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
+1. vnavmesh
+2. Lifestream
+
+********************************************************************************
+*                                Change Log                                    *
+********************************************************************************
+0.0.1 - initial commits
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
+]]
+
+import("System.Numerics")
+
+_MACRO_LOG_TITLE = "CurrencyDump"
+
+Currency = {
+    Poetics = 28,
+    PurpleGathererScrip = 33914,
+    OrangeGathererScrip = 41785
+}
+
+PoeticTurnIn =
+{
+    x=-12.3, y=211.0, z=-40.85,
+    npcName  = "Hismena",
+    zoneId   = 478,
+    itemName = "Goblinol", -- For reference only
+    itemId   = 16732,
+    price    = 10
+}
+
+ScripTurnIn =
+{
+    x = -17.3, y = 206.5, z = 49.8,
+    npcName = "Scrip Exchange",
+    zoneId = 478,
+    Purple = {
+        {
+            itemName    = "Hi-Cordial",
+            itemId      = 12669,
+            catIndex    = 4,
+            subCatIndex = 1,
+            itemIndex   = 0,
+            price       = 20
+        },
+        {
+            itemName    = "Gatherer's Guile Materia XI",
+            itemId      = 41763,
+            catIndex    = 5,
+            subCatIndex = 1,
+            itemIndex   = 1,
+            price       = 250
+        }
+    },
+    Orange = {
+        itemName = "Mount Token", -- For reference only
+        itemId = 41807,
+        catIndex    = 4,
+        subCatIndex = 8,
+        itemIndex   = 7,
+        price = 1000
+    }
+}
+
+AlliedTurnIn = {
+    GC = {
+        {
+            x=96.0, y=40.2, z=60.7,
+            zoneId = 128,
+        },
+        {
+            x=-73.9, y=-0.5, z=1.5,
+            zoneId = 132
+        },
+        {
+            x=-151.8, y=4.1, z=-94.3,
+            zoneId  = 130
+        }
+    },
+    npcName = "Hunt Billmaster",
+    catIndex  = 3,
+    itemIndex = 1,
+    price     = 5
+}
+
+CenturioTurnIn = {
+    x=90.1, y=15.1, z=30.0,
+    npcName   = "Ardolain",
+    zoneId    = 418,
+    catIndex  = 0,
+    itemIndex = 1,
+    price     = 5
+}
+
+SelectTurnInPage = false
+PurpleIndex = 1
+
+function Teleport(aetheryteName)
+    yield("/tp "..aetheryteName)
+    while not Svc.Condition[CharacterCondition.betweenAreas] do
+        yield("/wait 0.1")
+    end
+    while Svc.Condition[CharacterCondition.betweenAreas] do
+        yield("/wait 0.1")
+    end
+    yield("/echo [".._MACRO_LOG_TITLE.."] Finished Teleport")
+    Dalamud.Log("[".._MACRO_LOG_TITLE.."] Finished Teleport")
+end
+
+function GoToPoeticTurnIn()
+    local currentZone = Svc.ClientState.TerritoryType
+    local dist = GetDistanceToPoint(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z)
+    if currentZone ~= PoeticTurnIn.zoneId then
+        yield("/echo [".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        Teleport("Idyllshire")
+    elseif dist > 5 then
+        if not Svc.Condition[CharacterCondition.mounted] then
+            yield('/gaction "mount roulette"')
+            yield("/wait 1")
+        elseif not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            IPC.vnavmesh.PathfindAndMoveTo(Vector3(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z), false)
+        end
+    elseif State ~= CharacterState.spendPoetics then
+        State = CharacterState.spendPoetics
+        yield("/echo [".._MACRO_LOG_TITLE.."] Buying "..PoeticTurnIn.itemName)
+        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Buying "..PoeticTurnIn.itemName)
+    end
+end
+
+function GoToScripTurnIn()
+    local currentZone = Svc.ClientState.TerritoryType
+    local dist = GetDistanceToPoint(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z)
+    if currentZone ~= ScripTurnIn.zoneId then
+        yield("/echo [".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        Teleport("Idyllshire")
+    elseif dist > 5 then
+        if not Svc.Condition[CharacterCondition.mounted] then
+            yield('/gaction "mount roulette"')
+            yield("/wait 1")
+        elseif not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            IPC.vnavmesh.PathfindAndMoveTo(Vector3(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z), false)
+        end
+    elseif State ~= CharacterState.spendOrange then
+        State = CharacterState.spendOrange
+        yield("/echo [".._MACRO_LOG_TITLE.."] Buying "..ScripTurnIn.Orange.itemName)
+        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Buying "..ScripTurnIn.Orange.itemName)
+    end
+end
+
+function SpendPoetics()
+    local poetics = Inventory.GetItemCount(Currency.Poetics)
+    local toBuy =  math.min(poetics//PoeticTurnIn.price,99)
+    if poetics < PoeticTurnIn.price then
+        if Addons.GetAddon("ShopExchangeCurrency").Ready then
+            yield("/callback ShopExchangeCurrency true -1")
+        else
+            State = CharacterState.goToScripTurnIn
+            yield("/echo [".._MACRO_LOG_TITLE.."] Nav to Scrip Exchange ")
+            Dalamud.Log("[".._MACRO_LOG_TITLE.."] Nav to Scrip Exchange ")
+        end
+        return
+    end
+
+    GoToPoeticTurnIn()
+
+    if not Entity.Target or Entity.Target.Name ~= PoeticTurnIn.npcName then
+        yield("/target "..PoeticTurnIn.npcName)
+    elseif Addons.GetAddon("SelectIconString").Ready then
+        yield("/callback SelectIconString true 7")
+    elseif Addons.GetAddon("SelectYesno").Ready then
+        yield("/callback SelectYesno true 0")
+    elseif Addons.GetAddon("ShopExchangeCurrency").Ready then
+        yield("/callback ShopExchangeCurrency false 0 6 "..toBuy.." 0")
+    else
+        yield("/interact")
+    end
+end
+
+function SpendOrange()
+    local ogs = Inventory.GetItemCount(Currency.OrangeGathererScrip)
+    local toBuy =  math.min(ogs//ScripTurnIn.Orange.price,4)
+    if ogs < ScripTurnIn.Orange.price then
+        if Addons.GetAddon("InclusionShop").Ready then
+            yield("/callback InclusionShop true -1")
+        else
+            SelectTurnInPage = false
+            State = CharacterState.spendPurple
+            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+        end
+        return
+    end
+
+    GoToScripTurnIn()
+
+    if not Entity.Target or Entity.Target.Name ~= ScripTurnIn.npcName then
+        yield("/target "..ScripTurnIn.npcName)
+    elseif Addons.GetAddon("SelectIconString").Ready then
+        yield("/callback SelectIconString true 0")
+    elseif Addons.GetAddon("InclusionShop").Ready then
+      if not SelectTurnInPage then
+          yield("/callback InclusionShop true 12 "..ScripTurnIn.Orange.catIndex)
+          yield("/wait 1")
+          yield("/callback InclusionShop true 13 "..ScripTurnIn.Orange.subCatIndex)
+          yield("/wait 1")
+          SelectTurnInPage = true
+      end
+      qty = math.min(Inventory.GetItemCount(Currency.OrangeGathererScrip)//ScripTurnIn.Orange.price, 4)
+      yield("/callback InclusionShop true 14 "..ScripTurnIn.Orange.itemIndex.." "..qty)
+      yield("/wait 1")
+    else
+        yield("/interact")
+    end
+end
+
+function SpendPurple()
+    local toBuy = 0
+    if PurpleIndex > 2 then
+        if Addons.GetAddon("InclusionShop").Ready then
+            yield("/callback InclusionShop true -1")
+        else
+            SelectTurnInPage = false
+            PurpleIndex = 1
+            State = CharacterState.sell
+            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+        end
+    elseif PurpleIndex == 1 then
+
+        local pgs = Inventory.GetItemCount(Currency.PurpleGathererScrip)
+        local itemCount = Inventory.GetItemCount(ScripTurnIn.Purple[PurpleIndex].itemId)
+        local needed = 999 - itemCount
+        local canBuy =  math.min(pgs//ScripTurnIn.Purple[PurpleIndex].price,99)
+        toBuy = math.min(math.min(canBuy,99),needed)
+        
+        if pgs < ScripTurnIn.Purple[PurpleIndex].price or toBuy <= 0 then
+            if Addons.GetAddon("InclusionShop").Ready then
+                yield("/callback InclusionShop true -1")
+            else
+                SelectTurnInPage = false
+                PurpleIndex = PurpleIndex + 1
+                yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+                Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+            end
+            return
+        end
+    else
+        local pgs = Inventory.GetItemCount(Currency.PurpleGathererScrip)
+        local itemCount = Inventory.GetItemCount(ScripTurnIn.Purple[PurpleIndex].itemId)
+        toBuy =  math.min(pgs//ScripTurnIn.Purple[PurpleIndex].price,16)
+        
+        if pgs < ScripTurnIn.Purple[PurpleIndex].price then
+            if Addons.GetAddon("InclusionShop").Ready then
+                yield("/callback InclusionShop true -1")
+            else
+                SelectTurnInPage = false
+                PurpleIndex = PurpleIndex + 1
+                yield("/echo [".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+                Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+            end
+            return
+        end
+    end
+
+    if not Entity.Target or Entity.Target.Name ~= ScripTurnIn.npcName then
+        yield("/target "..ScripTurnIn.npcName)
+    elseif Addons.GetAddon("SelectIconString").Ready then
+        yield("/callback SelectIconString true 0")
+    elseif Addons.GetAddon("InclusionShop").Ready then
+      if not SelectTurnInPage then
+          yield("/callback InclusionShop true 12 "..ScripTurnIn.Purple[PurpleIndex].catIndex)
+          yield("/wait 1")
+          yield("/callback InclusionShop true 13 "..ScripTurnIn.Purple[PurpleIndex].subCatIndex)
+          yield("/wait 1")
+          SelectTurnInPage = true
+      end
+      -- qty = math.min(Inventory.GetItemCount(Currency.OrangeGathererScrip)//ScripTurnIn.Orange.price, 4)
+      yield("/callback InclusionShop true 14 "..ScripTurnIn.Purple[PurpleIndex].itemIndex.." "..toBuy)
+      yield("/wait 1")
+    else
+        yield("/interact")
+    end
+end
+
+function TurnIn()
+    local ore = Inventory.GetItemCount(OreItemId)
+    if ore == 0 then
+        if Addons.GetAddon("ShopExchangeItem").Ready then
+            yield("/callback ShopExchangeItem true -1")
+        else
+            StopFlag = true
+        end
+        return
+    end
+
+    GoToPoeticTurnIn()
+
+    if GetTargetName() ~= PoeticTurnIn.turnInNpc then
+        yield("/target "..PoeticTurnIn.turnInNpc)
+    elseif IsAddonVisible("SelectIconString") then
+        yield("/callback SelectIconString true 5")
+    elseif IsAddonVisible("ShopExchangeItemDialog") then
+        yield("/callback ShopExchangeItemDialog true 0")
+    elseif IsAddonVisible("ShopExchangeItem") then
+        yield("/callback ShopExchangeItem true 0 1 "..ore.." 0")
+    else
+        yield("/interact")
+    end
+end
+
+function Sell()
+    yield("/echo [".._MACRO_LOG_TITLE.."] Sell "..PoeticTurnIn.itemName)
+    
+    local goblinol = Inventory.GetItemCount(PoeticTurnIn.itemId)
+    if goblinol == 0 then
+        if Addons.GetAddon("ShopExchangeItem").Ready then
+            yield("/callback ShopExchangeItem true -1")
+        else
+            yield("/tp ap")
+            StopFlag = true
+            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying G6DM")
+            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying G6DM")
+        end
+        return
+    end
+
+    yield("/li auto")
+    StopFlag = true
+    yield("/echo [".._MACRO_LOG_TITLE.."] WIP Returning to home")
+    Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Returning to home")
+end
+
+function Ready()
+    if Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price
+    or Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price
+    or Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price
+    or Inventory.GetItemCount(PoeticTurnIn.itemId) > 0 then
+        State = CharacterState.goToPoeticTurnIn
+    else
+        yield("/echo [".._MACRO_LOG_TITLE.."] Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
+        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
+        StopFlag = true
+    end
+end
+
+function GetDistanceToPoint(dX, dY, dZ)
+    local player = Entity.Player
+    if not player or not player.Position then
+        return math.huge
+    end
+
+    local px = player.Position.X
+    local py = player.Position.Y
+    local pz = player.Position.Z
+
+
+    local dx = dX - px
+    local dy = dY - py
+    local dz = dZ - pz
+
+    local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+    return distance
+end
+
+CharacterCondition = {
+    mounted=4,
+    gathering=6,
+    inCombat=26,
+    casting=27,
+    occupiedInEvent=31,
+    occupiedInQuestEvent=32,
+    occupied=33,
+    boundByDuty=34,
+    occupiedMateriaExtractionAndRepair=39,
+    gathering42=42,
+    fishing=43,
+    betweenAreas=45,
+    jumping48=48,
+    jumpPlatform=61,
+    betweenAreas51=51,
+    boundByDuty56=56,
+    mounting57=57,
+    mounting64=64,
+    beingMoved=70,
+    flying=77
+}
+
+CharacterState =
+{
+    ready            = Ready,
+    goToPoeticTurnIn = GoToPoeticTurnIn,
+    goToScripTurnIn  = GoToScripTurnIn,
+    spendPoetics     = SpendPoetics,
+    spendOrange      = SpendOrange,
+    spendPurple      = SpendPurple,
+    sell             = Sell,
+    turnIn           = TurnIn
+}
+
+
+State = CharacterState.ready
+StopFlag = false
+while not StopFlag do
+    if State == Ready then
+      Ready()
+    elseif State == GoToPoeticTurnIn then
+      GoToPoeticTurnIn()
+    elseif State == GoToScripTurnIn then
+      GoToScripTurnIn()
+    elseif State == SpendPoetics then
+      SpendPoetics()
+    elseif State == SpendOrange then
+      SpendOrange()
+    elseif State == SpendPurple then
+      SpendPurple()
+    elseif State == Sell then
+      Sell()
+    else
+      yield("/echo unknown state:")
+    end
+    yield("/wait 0.1")
+end
