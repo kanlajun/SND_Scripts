@@ -184,6 +184,7 @@ function GoToCenturioTurnIn()
             IPC.vnavmesh.PathfindAndMoveTo(CenturioTurnIn.position, false)
         end
     elseif State ~= CharacterState.spendCenturio then
+        yield("/wait 2")
         State = CharacterState.spendCenturio
         _LOGGER("Buying "..CenturioTurnIn.itemName.." with Centurio Seals")
     end
