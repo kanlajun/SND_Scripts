@@ -136,21 +136,28 @@ function _LOGGER(log_message)
     Dalamud.Log(full_log_message)
 end
 
-function Teleport(aetheryteName)
+function Teleport(aetheryteName, zoneId)
     yield("/li "..aetheryteName)
     _LOGGER("Initiate Teleport")
-    while not Svc.Condition[CharacterCondition.betweenAreas] do
-        yield("/wait 0.1")
-    end
-    while Svc.Condition[CharacterCondition.betweenAreas] or IPC.Lifestream.IsBusy() do
-        yield("/wait 0.1")
+
+    if zoneId ~= nil then
+        while not Svc.Condition[CharacterCondition.betweenAreas] do
+            yield("/wait 0.1")
+        end
+        while Svc.Condition[CharacterCondition.betweenAreas] or IPC.Lifestream.IsBusy() do
+            yield("/wait 0.1")
+        end
+    else
+        while Svc.ClientState.TerritoryType ~= zoneId do
+            yield("/wait 1")
+        end
     end
     _LOGGER("Finished Teleport")
 end
 
 function GoToAlliedTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].position)
+    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].position, AlliedTurnIn.GC[Player.GrandCompany].zoneId)
     if currentZone ~= AlliedTurnIn.GC[Player.GrandCompany].zoneId then
         Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName)
     elseif dist > 5 then
