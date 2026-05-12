@@ -157,9 +157,9 @@ end
 
 function GoToAlliedTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].position, AlliedTurnIn.GC[Player.GrandCompany].zoneId)
+    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].position)
     if currentZone ~= AlliedTurnIn.GC[Player.GrandCompany].zoneId then
-        Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName)
+        Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName, AlliedTurnIn.GC[Player.GrandCompany].zoneId)
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
             yield("/wait 5")
