@@ -501,9 +501,9 @@ function GetDistanceToPoint(position)
     local py = player.Position.Y
     local pz = player.Position.Z
 
-    local dX = position.x
-    local dY = position.y
-    local dZ = position.z
+    local dX = position.X
+    local dY = position.Y
+    local dZ = position.Z
 
     local dx = dX - px
     local dy = dY - py
