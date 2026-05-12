@@ -31,8 +31,13 @@ import("System.Numerics")
 _MACRO_LOG_TITLE = "CurrencyDump"
 
 Currency = {
-    Poetics = 28,
+    Poetics             = 28,
+    AlliedSeals         = 27,
+    CenturioSeals       = 10307,
+    SackOfNuts          = 26533,
+    PurpleCrafterScrip  = 33913,
     PurpleGathererScrip = 33914,
+    OrangeCrafterScrip  = 41784,
     OrangeGathererScrip = 41785
 }
 
