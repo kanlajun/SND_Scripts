@@ -85,22 +85,22 @@ AlliedTurnIn = {
     GC = {
         {
             x=96.0, y=40.2, z=60.7,
-            lifestreamName = "Aftcastle"
+            lifestreamName = "Aftcastle",
             zoneId         = 128,
         },
         {
             x=-73.9, y=-0.5, z=1.5,
-            lifestreamName = "New Gridania"
+            lifestreamName = "New Gridania",
             zoneId = 132
         },
         {
             x=-151.8, y=4.1, z=-94.3,
-            lifestreamName = "Steps of Nald"
+            lifestreamName = "Steps of Nald",
             zoneId         = 130
         }
     },
     npcName = "Hunt Billmaster",
-    itemName  = "Aetheryte Ticket"
+    itemName  = "Aetheryte Ticket",
     itemId    = 7569,
     catIndex  = 3,
     itemIndex = 1,
@@ -111,7 +111,7 @@ CenturioTurnIn = {
     x=90.1, y=15.1, z=30.0,
     npcName   = "Ardolain",
     zoneId    = 418,
-    itemName  = "Aetheryte Ticket"
+    itemName  = "Aetheryte Ticket",
     itemId    = 7569,
     catIndex  = 0,
     itemIndex = 1,
@@ -130,7 +130,7 @@ end
 function Teleport(aetheryteName)
     yield("/li "..aetheryteName)
     _LOGGER("Initiate Teleport")
-    while not Svc.Condition[CharacterCondition.betweenAreas] or not IPC.Lifestream.IsBusy() do
+    while not Svc.Condition[CharacterCondition.betweenAreas] do
         yield("/wait 0.1")
     end
     while Svc.Condition[CharacterCondition.betweenAreas] or IPC.Lifestream.IsBusy() do
@@ -146,6 +146,7 @@ function GoToAlliedTurnIn()
         Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName)
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            yield("/gaction sprint")
             IPC.vnavmesh.PathfindAndMoveTo(Vector3(AlliedTurnIn.GC[Player.GrandCompany].x,AlliedTurnIn.GC[Player.GrandCompany].y,AlliedTurnIn.GC[Player.GrandCompany].z), false)
         end
     elseif State ~= CharacterState.spendAllied then
@@ -375,8 +376,8 @@ function Ready()
     if Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price
     or Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price
     or Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price
-    or Inventory.GetItemCount(PoeticTurnIn.itemId) > 0 then
-        State = CharacterState.goToPoeticTurnIn
+    or Inventory.GetItemCount(PoeticTurnIn.itemId) >= 0 then
+        State = CharacterState.goToAlliedTurnIn
     else
         _LOGGER("Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
         StopFlag = true
@@ -428,6 +429,7 @@ CharacterCondition = {
 CharacterState =
 {
     ready            = Ready,
+    goToAlliedTurnIn = GoToAlliedTurnIn,
     goToPoeticTurnIn = GoToPoeticTurnIn,
     goToScripTurnIn  = GoToScripTurnIn,
     spendAllied      = SpendAllied,
@@ -442,22 +444,6 @@ CharacterState =
 State = CharacterState.ready
 StopFlag = false
 while not StopFlag do
-    if State == Ready then
-      Ready()
-    elseif State == GoToPoeticTurnIn then
-      GoToPoeticTurnIn()
-    elseif State == GoToScripTurnIn then
-      GoToScripTurnIn()
-    elseif State == SpendPoetics then
-      SpendPoetics()
-    elseif State == SpendOrange then
-      SpendOrange()
-    elseif State == SpendPurple then
-      SpendPurple()
-    elseif State == Sell then
-      Sell()
-    else
-      _LOGGER("unknown state:"..debug.getinfo(State))
-    end
+    State()
     yield("/wait 0.1")
 end
