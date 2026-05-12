@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                  Currency Dump - Buy Goblinol and other things               *
-*                                Version 0.0.1                                 *
+*                                Version 0.0.2                                 *
 ********************************************************************************
 
 Created by: 
@@ -20,6 +20,7 @@ eventually spend other currencies on stuff too.
 ********************************************************************************
 *                                Change Log                                    *
 ********************************************************************************
+0.0.2 - spend allied and centurios
 0.0.1 - initial commits
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
@@ -30,7 +31,8 @@ import("System.Numerics")
 
 _MACRO_LOG_TITLE = "CurrencyDump"
 
-Currency = {
+Currency = 
+{
     Poetics             = 28,
     AlliedSeals         = 27,
     CenturioSeals       = 10307,
@@ -43,7 +45,7 @@ Currency = {
 
 PoeticTurnIn =
 {
-    x=-12.3, y=211.0, z=-40.85,
+    position  = Vector3(-12.3, 211.0, -40.85),
     npcName   = "Hismena",
     zoneId    = 478,
     itemName  = "Goblinol", -- For reference only
@@ -55,10 +57,11 @@ PoeticTurnIn =
 
 ScripTurnIn =
 {
-    x = -17.3, y = 206.5, z = 49.8,
-    npcName = "Scrip Exchange",
-    zoneId = 478,
-    Purple = {
+    position = Vector3(-17.3, 206.5, 49.8),
+    npcName  = "Scrip Exchange",
+    zoneId   = 478,
+    Purple   = 
+    {
         {
             itemName    = "Hi-Cordial",
             itemId      = 12669,
@@ -77,34 +80,34 @@ ScripTurnIn =
         }
     },
     Orange = {
-        itemName = "Mount Token", -- For reference only
-        itemId = 41807,
+        itemName    = "Mount Token", -- For reference only
+        itemId      = 41807,
         catIndex    = 4,
         subCatIndex = 8,
         itemIndex   = 7,
-        price = 1000
+        price       = 1000
     }
 }
 
 AlliedTurnIn = {
     GC = {
         {
-            x=96.0, y=40.2, z=60.7,
+            position       = Vector3(96.0, 40.2, 60.7),
             lifestreamName = "Aftcastle",
             zoneId         = 128,
         },
         {
-            x=-73.9, y=-0.5, z=1.5,
+            position       = Vector3(-73.9, -0.5, 1.5),
             lifestreamName = "New Gridania",
             zoneId = 132
         },
         {
-            x=-151.8, y=4.1, z=-94.3,
+            position       = Vector3(-151.8, 4.1, -94.3),
             lifestreamName = "Steps of Nald",
             zoneId         = 130
         }
     },
-    npcName = "Hunt Billmaster",
+    npcName   = "Hunt Billmaster",
     itemName  = "Aetheryte Ticket",
     itemId    = 7569,
     catIndex  = 3,
@@ -113,7 +116,7 @@ AlliedTurnIn = {
 }
 
 CenturioTurnIn = {
-    x=90.1, y=15.1, z=30.0,
+    position  = Vector3(90.1, 15.1, 30.0),
     npcName   = "Ardolain",
     zoneId    = 418,
     itemName  = "Aetheryte Ticket",
@@ -146,13 +149,13 @@ end
 
 function GoToAlliedTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].x,AlliedTurnIn.GC[Player.GrandCompany].y,AlliedTurnIn.GC[Player.GrandCompany].z)
+    local dist = GetDistanceToPoint(AlliedTurnIn.GC[Player.GrandCompany].position)
     if currentZone ~= AlliedTurnIn.GC[Player.GrandCompany].zoneId then
         Teleport(AlliedTurnIn.GC[Player.GrandCompany].lifestreamName)
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
             yield("/gaction sprint")
-            IPC.vnavmesh.PathfindAndMoveTo(Vector3(AlliedTurnIn.GC[Player.GrandCompany].x,AlliedTurnIn.GC[Player.GrandCompany].y,AlliedTurnIn.GC[Player.GrandCompany].z), false)
+            IPC.vnavmesh.PathfindAndMoveTo(AlliedTurnIn.GC[Player.GrandCompany].position, false)
         end
     elseif State ~= CharacterState.spendAllied then
         State = CharacterState.spendAllied
@@ -162,13 +165,13 @@ end
 
 function GoToCenturioTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(CenturioTurnIn.x,CenturioTurnIn.y,CenturioTurnIn.z)
+    local dist = GetDistanceToPoint(CenturioTurnIn.position)
     if currentZone ~= CenturioTurnIn.zoneId then
         Teleport("Forgotten Knight")
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
             yield("/gaction sprint")
-            IPC.vnavmesh.PathfindAndMoveTo(Vector3(CenturioTurnIn.x,CenturioTurnIn.y,CenturioTurnIn.z), false)
+            IPC.vnavmesh.PathfindAndMoveTo(CenturioTurnIn.position, false)
         end
     elseif State ~= CharacterState.spendCenturio then
         State = CharacterState.spendCenturio
@@ -178,7 +181,7 @@ end
 
 function GoToPoeticTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z)
+    local dist = GetDistanceToPoint(PoeticTurnIn.position)
     if currentZone ~= PoeticTurnIn.zoneId then
         Teleport("Idyllshire")
     elseif dist > 5 then
@@ -186,7 +189,7 @@ function GoToPoeticTurnIn()
             yield('/gaction "mount roulette"')
             yield("/wait 1")
         elseif not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
-            IPC.vnavmesh.PathfindAndMoveTo(Vector3(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z), false)
+            IPC.vnavmesh.PathfindAndMoveTo(PoeticTurnIn.position, false)
         end
     elseif State ~= CharacterState.spendPoetics then
         State = CharacterState.spendPoetics
@@ -196,7 +199,7 @@ end
 
 function GoToScripTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
-    local dist = GetDistanceToPoint(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z)
+    local dist = GetDistanceToPoint(ScripTurnIn.position)
     if currentZone ~= ScripTurnIn.zoneId then
         Teleport("Idyllshire")
     elseif dist > 5 then
@@ -204,7 +207,7 @@ function GoToScripTurnIn()
             yield('/gaction "mount roulette"')
             yield("/wait 1")
         elseif not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
-            IPC.vnavmesh.PathfindAndMoveTo(Vector3(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z), false)
+            IPC.vnavmesh.PathfindAndMoveTo(ScripTurnIn.position, false)
         end
     elseif State ~= CharacterState.spendOrange then
         State = CharacterState.spendOrange
@@ -488,7 +491,7 @@ function Ready()
     end
 end
 
-function GetDistanceToPoint(dX, dY, dZ)
+function GetDistanceToPoint(position)
     local player = Entity.Player
     if not player or not player.Position then
         return math.huge
@@ -498,6 +501,9 @@ function GetDistanceToPoint(dX, dY, dZ)
     local py = player.Position.Y
     local pz = player.Position.Z
 
+    local dX = position.x
+    local dY = position.y
+    local dZ = position.z
 
     local dx = dX - px
     local dy = dY - py
