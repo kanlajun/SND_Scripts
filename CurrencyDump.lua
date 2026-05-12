@@ -116,7 +116,7 @@ AlliedTurnIn = {
 }
 
 CenturioTurnIn = {
-    position  = Vector3(90.1, 15.1, 30.0),
+    position  = Vector3(94.4, 15.0, 31.6),
     npcName   = "Ardolain",
     zoneId    = 418,
     itemName  = "Aetheryte Ticket",
@@ -170,6 +170,7 @@ function GoToCenturioTurnIn()
         Teleport("Forgotten Knight")
     elseif dist > 5 then
         if not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
+            yield("/wait 3")
             yield("/gaction sprint")
             IPC.vnavmesh.PathfindAndMoveTo(CenturioTurnIn.position, false)
         end
