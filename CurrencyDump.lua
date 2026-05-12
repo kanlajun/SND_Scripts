@@ -260,12 +260,14 @@ function SpendCenturio()
     local centurio  = Inventory.GetItemCount(Currency.CenturioSeals)
     local itemCount = Inventory.GetItemCount(CenturioTurnIn.itemId)
     local needed    = 999 - itemCount
-    local canBuy    = math.min(allied//CenturioTurnIn.price,99)
+    local canBuy    = math.min(centurio//CenturioTurnIn.price,99)
     local toBuy     = math.min(math.min(canBuy,99),needed)
 
     if centurio < CenturioTurnIn.price or toBuy <= 0 then
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
+        elseif Addons.GetAddon("SelectString").Ready then
+            yield("/callback SelectString true -1")
         else
             State = CharacterState.goToPoeticTurnIn
         end
@@ -276,8 +278,8 @@ function SpendCenturio()
 
     if not Entity.Target or Entity.Target.Name ~= CenturioTurnIn.npcName then
         yield("/target "..CenturioTurnIn.npcName)
-    elseif Addons.GetAddon("SelectIconString").Ready then
-        yield("/callback SelectIconString true "..CenturioTurnIn.catIndex)
+    elseif Addons.GetAddon("SelectString").Ready then
+        yield("/callback SelectString true "..CenturioTurnIn.catIndex)
     elseif Addons.GetAddon("SelectYesno").Ready then
         yield("/callback SelectYesno true 0")
     elseif Addons.GetAddon("ShopExchangeCurrency").Ready then
