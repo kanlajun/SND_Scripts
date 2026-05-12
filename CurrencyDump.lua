@@ -130,8 +130,7 @@ function GoToPoeticTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
     local dist = GetDistanceToPoint(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z)
     if currentZone ~= PoeticTurnIn.zoneId then
-        yield("/echo [".._MACRO_LOG_TITLE.."] Initiate Teleport")
-        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        _LOGGER("Initiate Teleport")
         Teleport("Idyllshire")
     elseif dist > 5 then
         if not Svc.Condition[CharacterCondition.mounted] then
@@ -142,8 +141,7 @@ function GoToPoeticTurnIn()
         end
     elseif State ~= CharacterState.spendPoetics then
         State = CharacterState.spendPoetics
-        yield("/echo [".._MACRO_LOG_TITLE.."] Buying "..PoeticTurnIn.itemName)
-        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Buying "..PoeticTurnIn.itemName)
+        _LOGGER("Buying "..PoeticTurnIn.itemName)
     end
 end
 
@@ -151,8 +149,7 @@ function GoToScripTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
     local dist = GetDistanceToPoint(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z)
     if currentZone ~= ScripTurnIn.zoneId then
-        yield("/echo [".._MACRO_LOG_TITLE.."] Initiate Teleport")
-        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Initiate Teleport")
+        _LOGGER("Initiate Teleport")
         Teleport("Idyllshire")
     elseif dist > 5 then
         if not Svc.Condition[CharacterCondition.mounted] then
@@ -163,8 +160,7 @@ function GoToScripTurnIn()
         end
     elseif State ~= CharacterState.spendOrange then
         State = CharacterState.spendOrange
-        yield("/echo [".._MACRO_LOG_TITLE.."] Buying "..ScripTurnIn.Orange.itemName)
-        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Buying "..ScripTurnIn.Orange.itemName)
+        _LOGGER("Buying "..ScripTurnIn.Orange.itemName)
     end
 end
 
@@ -176,8 +172,7 @@ function SpendPoetics()
             yield("/callback ShopExchangeCurrency true -1")
         else
             State = CharacterState.goToScripTurnIn
-            yield("/echo [".._MACRO_LOG_TITLE.."] Nav to Scrip Exchange ")
-            Dalamud.Log("[".._MACRO_LOG_TITLE.."] Nav to Scrip Exchange ")
+            _LOGGER("Nav to Scrip Exchange")
         end
         return
     end
@@ -206,8 +201,7 @@ function SpendOrange()
         else
             SelectTurnInPage = false
             State = CharacterState.spendPurple
-            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
-            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+            _LOGGER("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
         end
         return
     end
@@ -243,8 +237,7 @@ function SpendPurple()
             SelectTurnInPage = false
             PurpleIndex = 1
             State = CharacterState.sell
-            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
-            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+            _LOGGER("WIP Selling "..PoeticTurnIn.itemName)
         end
     elseif PurpleIndex == 1 then
 
@@ -260,8 +253,7 @@ function SpendPurple()
             else
                 SelectTurnInPage = false
                 PurpleIndex = PurpleIndex + 1
-                yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
-                Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+                _LOGGER("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
             end
             return
         end
@@ -276,8 +268,7 @@ function SpendPurple()
             else
                 SelectTurnInPage = false
                 PurpleIndex = PurpleIndex + 1
-                yield("/echo [".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
-                Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Selling "..PoeticTurnIn.itemName)
+                _LOGGER("WIP Selling "..PoeticTurnIn.itemName)
             end
             return
         end
@@ -330,7 +321,7 @@ function TurnIn()
 end
 
 function Sell()
-    yield("/echo [".._MACRO_LOG_TITLE.."] Sell "..PoeticTurnIn.itemName)
+    _LOGGER("Sell "..PoeticTurnIn.itemName)
     
     local goblinol = Inventory.GetItemCount(PoeticTurnIn.itemId)
     if goblinol == 0 then
@@ -339,16 +330,14 @@ function Sell()
         else
             yield("/tp ap")
             StopFlag = true
-            yield("/echo [".._MACRO_LOG_TITLE.."] WIP Buying G6DM")
-            Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Buying G6DM")
+            _LOGGER("WIP Buying G6DM")
         end
         return
     end
 
     yield("/li auto")
     StopFlag = true
-    yield("/echo [".._MACRO_LOG_TITLE.."] WIP Returning to home")
-    Dalamud.Log("[".._MACRO_LOG_TITLE.."] WIP Returning to home")
+    _LOGGER("WIP Returning to home")
 end
 
 function Ready()
@@ -358,8 +347,7 @@ function Ready()
     or Inventory.GetItemCount(PoeticTurnIn.itemId) > 0 then
         State = CharacterState.goToPoeticTurnIn
     else
-        yield("/echo [".._MACRO_LOG_TITLE.."] Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
-        Dalamud.Log("[".._MACRO_LOG_TITLE.."] Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
+        _LOGGER("Not enough Poetics or no "..PoeticTurnIn.itemName.." to sell")
         StopFlag = true
     end
 end
@@ -437,7 +425,7 @@ while not StopFlag do
     elseif State == Sell then
       Sell()
     else
-      yield("/echo unknown state:")
+      _LOGGER("unknown state:"..debug.getinfo(State))
     end
     yield("/wait 0.1")
 end
