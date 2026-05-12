@@ -112,16 +112,18 @@ CenturioTurnIn = {
 SelectTurnInPage = false
 PurpleIndex = 1
 
+function _LOGGER(log_message)
+    local full_log_message = "[".._MACRO_LOG_TITLE.."] "..log_message
+    yield("/echo "..full_log_message)
+    Dalamud.Log(full_log_message)
+end
+
 function Teleport(aetheryteName)
-    yield("/tp "..aetheryteName)
-    while not Svc.Condition[CharacterCondition.betweenAreas] do
+    yield("/li "..aetheryteName)
+    while not IPC.Lifestream.IsBusy() do
         yield("/wait 0.1")
     end
-    while Svc.Condition[CharacterCondition.betweenAreas] do
-        yield("/wait 0.1")
-    end
-    yield("/echo [".._MACRO_LOG_TITLE.."] Finished Teleport")
-    Dalamud.Log("[".._MACRO_LOG_TITLE.."] Finished Teleport")
+    _LOGGER("Finished Teleport")
 end
 
 function GoToPoeticTurnIn()
