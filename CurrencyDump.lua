@@ -275,6 +275,8 @@ function SpendCenturio()
     if centurio < CenturioTurnIn.price or toBuy <= 0 then
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
+            yield("/wait 0.5")
+            yield("/callback SelectString true 3")
         elseif Addons.GetAddon("SelectString").Ready then
             yield("/callback SelectString true 3")
         else
