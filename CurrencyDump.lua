@@ -120,7 +120,10 @@ end
 
 function Teleport(aetheryteName)
     yield("/li "..aetheryteName)
-    while not IPC.Lifestream.IsBusy() do
+    while not Svc.Condition[CharacterCondition.betweenAreas] do
+        yield("/wait 0.1")
+    end
+    while Svc.Condition[CharacterCondition.betweenAreas] do
         yield("/wait 0.1")
     end
     _LOGGER("Finished Teleport")
