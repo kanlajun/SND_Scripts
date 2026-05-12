@@ -110,7 +110,7 @@ AlliedTurnIn = {
     npcName   = "Hunt Billmaster",
     itemName  = "Aetheryte Ticket",
     itemId    = 7569,
-    catIndex  = 3,
+    catIndex  = 4,
     itemIndex = 1,
     price     = 5
 }
