@@ -330,7 +330,7 @@ function Sell()
         if Addons.GetAddon("ShopExchangeItem").Ready then
             yield("/callback ShopExchangeItem true -1")
         else
-            yield("/tp ap")
+            yield("/li auto")
             StopFlag = true
             _LOGGER("WIP Buying G6DM")
         end
