@@ -140,7 +140,7 @@ function Teleport(aetheryteName, zoneId)
     yield("/li "..aetheryteName)
     _LOGGER("Initiate Teleport")
 
-    if zoneId ~= nil then
+    if zoneId == nil then
         while not Svc.Condition[CharacterCondition.betweenAreas] do
             yield("/wait 0.1")
         end
@@ -240,7 +240,7 @@ function SpendAllied()
             local centurio = Inventory.GetItemCount(Currency.CenturioSeals)
             if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
                 State = CharacterState.goToCenturioTurnIn
-                _LOGGER("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.."... Heading to Centurio vendor.")
+                _LOGGER("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Centurio vendor.")
             else
                 State = CharacterState.goToPoeticTurnIn
                 _LOGGER("Heading to Poetics vendor.")
