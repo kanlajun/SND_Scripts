@@ -37,6 +37,7 @@ Currency =
     AlliedSeals         = 27,
     CenturioSeals       = 10307,
     SackOfNuts          = 26533,
+    BicolorGemstones    = 26807,
     PurpleCrafterScrip  = 33913,
     PurpleGathererScrip = 33914,
     OrangeCrafterScrip  = 41784,
