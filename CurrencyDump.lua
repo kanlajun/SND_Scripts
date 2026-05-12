@@ -193,6 +193,7 @@ end
 
 function SpendAllied()
     _LOGGER("WIP spend allied")
+    yield("/wait 3")
     State = CharacterState.goToPoeticTurnIn
 end
 
