@@ -190,7 +190,7 @@ function GoToPoeticTurnIn()
         end
     elseif State ~= CharacterState.spendPoetics then
         State = CharacterState.spendPoetics
-        _LOGGER("Buying "..PoeticTurnIn.itemName)
+        _LOGGER("Purchasing "..PoeticTurnIn.itemName.." from "..PoeticTurnIn.npcName)
     end
 end
 
@@ -208,20 +208,79 @@ function GoToScripTurnIn()
         end
     elseif State ~= CharacterState.spendOrange then
         State = CharacterState.spendOrange
-        _LOGGER("Buying "..ScripTurnIn.Orange.itemName)
+        _LOGGER("Purchasing items with Scrips")
     end
 end
 
 function SpendAllied()
     _LOGGER("WIP spend allied")
-    yield("/wait 3")
-    State = CharacterState.goToPoeticTurnIn
+    local allied    = Inventory.GetItemCount(Currency.AlliedSeals)
+    local itemCount = Inventory.GetItemCount(AlliedTurnIn.itemId)
+    local needed    = 999 - itemCount
+    local canBuy    = math.min(allied//AlliedTurnIn.price,99)
+    local toBuy     = math.min(math.min(canBuy,99),needed)
+
+    if allied < AlliedTurnIn.price or toBuy <= 0 then
+        if Addons.GetAddon("ShopExchangeCurrency").Ready then
+            yield("/callback ShopExchangeCurrency true -1")
+        else
+            local centurio = Inventory.GetItemCount(Currency.CenturioSeals)
+            if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
+                State = CharacterState.goToCenturioTurnIn
+                _LOGGER("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.."... Heading to Centurio vendor.")
+            else
+                State = CharacterState.goToPoeticTurnIn
+                _LOGGER("Heading to Poetics vendor.")
+            end
+        end
+        return
+    end
+
+    GoToAlliedTurnIn()
+
+    if not Entity.Target or Entity.Target.Name ~= AlliedTurnIn.npcName then
+        yield("/target "..AlliedTurnIn.npcName)
+    elseif Addons.GetAddon("SelectIconString").Ready then
+        yield("/callback SelectIconString true "..AlliedTurnIn.catIndex)
+    elseif Addons.GetAddon("SelectYesno").Ready then
+        yield("/callback SelectYesno true 0")
+    elseif Addons.GetAddon("ShopExchangeCurrency").Ready then
+        yield("/callback ShopExchangeCurrency false 0 "..AlliedTurnIn.itemIndex.." "..toBuy.." 0")
+    else
+        yield("/interact")
+    end
 end
 
 function SpendCenturio()
     _LOGGER("WIP spend centurio")
-    yield("/wait 3")
-    State = CharacterState.goToPoeticTurnIn
+    local centurio  = Inventory.GetItemCount(Currency.CenturioSeals)
+    local itemCount = Inventory.GetItemCount(CenturioTurnIn.itemId)
+    local needed    = 999 - itemCount
+    local canBuy    = math.min(allied//CenturioTurnIn.price,99)
+    local toBuy     = math.min(math.min(canBuy,99),needed)
+
+    if centurio < CenturioTurnIn.price or toBuy <= 0 then
+        if Addons.GetAddon("ShopExchangeCurrency").Ready then
+            yield("/callback ShopExchangeCurrency true -1")
+        else
+            State = CharacterState.goToPoeticTurnIn
+        end
+        return
+    end
+
+    GoToCenturioTurnIn()
+
+    if not Entity.Target or Entity.Target.Name ~= CenturioTurnIn.npcName then
+        yield("/target "..CenturioTurnIn.npcName)
+    elseif Addons.GetAddon("SelectIconString").Ready then
+        yield("/callback SelectIconString true "..CenturioTurnIn.catIndex)
+    elseif Addons.GetAddon("SelectYesno").Ready then
+        yield("/callback SelectYesno true 0")
+    elseif Addons.GetAddon("ShopExchangeCurrency").Ready then
+        yield("/callback ShopExchangeCurrency false 0 "..CenturioTurnIn.itemIndex.." "..toBuy.." 0")
+    else
+        yield("/interact")
+    end
 end
 
 function SpendPoetics()
@@ -231,6 +290,7 @@ function SpendPoetics()
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
         else
+            yield("/wait 3")
             State = CharacterState.goToScripTurnIn
             _LOGGER("Nav to Scrip Exchange")
         end
