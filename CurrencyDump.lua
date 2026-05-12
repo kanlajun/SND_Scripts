@@ -39,11 +39,13 @@ Currency = {
 PoeticTurnIn =
 {
     x=-12.3, y=211.0, z=-40.85,
-    npcName  = "Hismena",
-    zoneId   = 478,
-    itemName = "Goblinol", -- For reference only
-    itemId   = 16732,
-    price    = 10
+    npcName   = "Hismena",
+    zoneId    = 478,
+    itemName  = "Goblinol", -- For reference only
+    itemId    = 16732,
+    catIndex  = 7,
+    itemIndex = 6,
+    price     = 10
 }
 
 ScripTurnIn =
@@ -95,6 +97,8 @@ AlliedTurnIn = {
         }
     },
     npcName = "Hunt Billmaster",
+    itemName  = "Aetheryte Ticket
+    itemId    = 7569,
     catIndex  = 3,
     itemIndex = 1,
     price     = 5
@@ -104,6 +108,8 @@ CenturioTurnIn = {
     x=90.1, y=15.1, z=30.0,
     npcName   = "Ardolain",
     zoneId    = 418,
+    itemName  = "Aetheryte Ticket
+    itemId    = 7569,
     catIndex  = 0,
     itemIndex = 1,
     price     = 5
@@ -184,11 +190,11 @@ function SpendPoetics()
     if not Entity.Target or Entity.Target.Name ~= PoeticTurnIn.npcName then
         yield("/target "..PoeticTurnIn.npcName)
     elseif Addons.GetAddon("SelectIconString").Ready then
-        yield("/callback SelectIconString true 7")
+        yield("/callback SelectIconString true "..PoeticTurnIn.catIndex)
     elseif Addons.GetAddon("SelectYesno").Ready then
         yield("/callback SelectYesno true 0")
     elseif Addons.GetAddon("ShopExchangeCurrency").Ready then
-        yield("/callback ShopExchangeCurrency false 0 6 "..toBuy.." 0")
+        yield("/callback ShopExchangeCurrency false 0 "..PoeticTurnIn.itemIndex.." "..toBuy.." 0")
     else
         yield("/interact")
     end
