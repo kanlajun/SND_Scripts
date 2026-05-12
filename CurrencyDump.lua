@@ -267,7 +267,7 @@ function SpendCenturio()
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
         elseif Addons.GetAddon("SelectString").Ready then
-            yield("/callback SelectString true -1")
+            yield("/callback SelectString true 3")
         else
             State = CharacterState.goToPoeticTurnIn
         end
