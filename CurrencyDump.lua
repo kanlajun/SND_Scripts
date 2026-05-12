@@ -120,6 +120,7 @@ end
 
 function Teleport(aetheryteName)
     yield("/li "..aetheryteName)
+    _LOGGER("Initiate Teleport")
     while not Svc.Condition[CharacterCondition.betweenAreas] do
         yield("/wait 0.1")
     end
@@ -133,7 +134,6 @@ function GoToPoeticTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
     local dist = GetDistanceToPoint(PoeticTurnIn.x, PoeticTurnIn.y, PoeticTurnIn.z)
     if currentZone ~= PoeticTurnIn.zoneId then
-        _LOGGER("Initiate Teleport")
         Teleport("Idyllshire")
     elseif dist > 5 then
         if not Svc.Condition[CharacterCondition.mounted] then
@@ -152,7 +152,6 @@ function GoToScripTurnIn()
     local currentZone = Svc.ClientState.TerritoryType
     local dist = GetDistanceToPoint(ScripTurnIn.x, ScripTurnIn.y, ScripTurnIn.z)
     if currentZone ~= ScripTurnIn.zoneId then
-        _LOGGER("Initiate Teleport")
         Teleport("Idyllshire")
     elseif dist > 5 then
         if not Svc.Condition[CharacterCondition.mounted] then
