@@ -625,12 +625,12 @@ function RefreshSettings()
     end
 
     local spendOrangeG = Config.Get("Spend Orange Gatherer Scrips?")
-    if spendOrangeG ~= nil
+    if spendOrangeG ~= nil then
         Settings.spendOrangeG = spendOrangeG
     end
 
     local spendPurpleG = Config.Get("Spend Purple Gatherer Scrips?")
-    if spendPurpleG ~= nil
+    if spendPurpleG ~= nil then
         Settings.spendPurpleG = spendPurpleG
     end
     
