@@ -1,7 +1,7 @@
 --[=====[
 [[SND Metadata]]
 author: kanlajun
-version: 0.0.4
+version: 0.0.5
 description: |
   Spends currencies on desired items
   - Allied and Centurios on Aetheryte Tickets (up to 999)
@@ -47,6 +47,7 @@ configs:
 ********************************************************************************
 *                                Change Log                                    *
 ********************************************************************************
+0.0.5 - Use configs to toggle spending different currencies on or off
 0.0.4 - Scrip vendor quest check
 0.0.3 - allied and centurios is fairly stable...ish?
 0.0.2 - initial allied and centurios spending
@@ -283,17 +284,23 @@ function SpendAllied()
     local canBuy    = math.min(allied//AlliedTurnIn.price,99)
     local toBuy     = math.min(math.min(canBuy,99),needed)
 
-    if allied < AlliedTurnIn.price or toBuy <= 0 then
+    if not Settings.spendAllied or allied < AlliedTurnIn.price or toBuy <= 0 then
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
         else
             local centurio = Inventory.GetItemCount(Currency.CenturioSeals)
-            if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
+            if Settings.spendCenturio and Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
                 State = CharacterState.goToCenturioTurnIn
                 Logger("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Centurio vendor.")
-            else
+            elseif Settings.spendPoetics then
                 State = CharacterState.goToPoeticTurnIn
                 Logger("Heading to Poetics vendor.")
+            elseif Settings.spendOrangeG or Settings.spendPurpleG then
+                State = CharacterState.goToScripTurnIn
+                Logger("Heading to Scrip vendor.")
+            else
+                StopFlag = true
+                Logger("No other spending is enabled.")
             end
         end
         return
@@ -321,15 +328,22 @@ function SpendCenturio()
     local canBuy    = math.min(centurio//CenturioTurnIn.price,99)
     local toBuy     = math.min(math.min(canBuy,99),needed)
 
-    if centurio < CenturioTurnIn.price or toBuy <= 0 then
+    if not Settings.spendCenturio or centurio < CenturioTurnIn.price or toBuy <= 0 then
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
             yield("/wait 0.5")
             yield("/callback SelectString true 3")
         elseif Addons.GetAddon("SelectString").Ready then
             yield("/callback SelectString true 3")
-        else
+        elseif Settings.spendPoetics then
             State = CharacterState.goToPoeticTurnIn
+            Logger("Heading to Poetics vendor.")
+        elseif Settings.spendOrangeG or Settings.spendPurpleG then
+            State = CharacterState.goToScripTurnIn
+            Logger("Heading to Scrip vendor.")
+        else
+            StopFlag = true
+            Logger("No other spending is enabled.")
         end
         return
     end
@@ -352,13 +366,17 @@ end
 function SpendPoetics()
     local poetics = Inventory.GetItemCount(Currency.Poetics)
     local toBuy =  math.min(poetics//PoeticTurnIn.price,99)
-    if poetics < PoeticTurnIn.price then
+
+    if not Settings.spendPoetics or poetics < PoeticTurnIn.price then
         if Addons.GetAddon("ShopExchangeCurrency").Ready then
             yield("/callback ShopExchangeCurrency true -1")
-        else
+        elseif Settings.spendOrangeG or Settings.spendPurpleG then
             yield("/wait 3")
             State = CharacterState.goToScripTurnIn
-            Logger("Nav to Scrip Exchange")
+            Logger("Heading to Scrip vendor.")
+        else
+            StopFlag = true
+            Logger("No other spending is enabled.")
         end
         return
     end
@@ -381,13 +399,17 @@ end
 function SpendOrange()
     local ogs = Inventory.GetItemCount(Currency.OrangeGathererScrip)
     local toBuy =  math.min(ogs//ScripTurnIn.Orange.price,4)
-    if ogs < ScripTurnIn.Orange.price then
+
+    if not Settings.spendOrangeG or ogs < ScripTurnIn.Orange.price then
         if Addons.GetAddon("InclusionShop").Ready then
             yield("/callback InclusionShop true -1")
-        else
+        elseif Settings.spendPurpleG then
             SelectTurnInPage = false
             State = CharacterState.spendPurple
             Logger("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+        else
+            StopFlag = true
+            Logger("No other spending is enabled.")
         end
         return
     end
@@ -433,7 +455,7 @@ function SpendPurple()
         local canBuy =  math.min(pgs//ScripTurnIn.Purple[PurpleIndex].price,99)
         toBuy = math.min(math.min(canBuy,99),needed)
         
-        if pgs < ScripTurnIn.Purple[PurpleIndex].price or toBuy <= 0 then
+        if not Settings.spendPurpleG or pgs < ScripTurnIn.Purple[PurpleIndex].price or toBuy <= 0 then
             if Addons.GetAddon("InclusionShop").Ready then
                 yield("/callback InclusionShop true -1")
             else
@@ -448,7 +470,7 @@ function SpendPurple()
         local itemCount = Inventory.GetItemCount(ScripTurnIn.Purple[PurpleIndex].itemId)
         toBuy =  math.min(pgs//ScripTurnIn.Purple[PurpleIndex].price,16)
         
-        if pgs < ScripTurnIn.Purple[PurpleIndex].price then
+        if not Settings.spendPurpleG or pgs < ScripTurnIn.Purple[PurpleIndex].price then
             if Addons.GetAddon("InclusionShop").Ready then
                 yield("/callback InclusionShop true -1")
             else
@@ -527,22 +549,22 @@ function Sell()
 end
 
 function Ready()
-    if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.AlliedSeals) > AlliedTurnIn.price then
+    if Settings.spendAllied and Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.AlliedSeals) > AlliedTurnIn.price then
         Logger("Less than 999 "..CenturioTurnIn.itemName.." and more than "..AlliedTurnIn.price.." Allied Seals... Heading to Allied Seals vendor.")
         State = CharacterState.goToAlliedTurnIn
-    elseif Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
+    elseif Settings.spendCenturio and Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
         Logger("Less than 999 "..CenturioTurnIn.itemName.." and more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Allied Seals vendor.")
         State = CharacterState.goToCenturioTurnIn
-    elseif Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price then
+    elseif Settings.spendPoetics and Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price then
         Logger("More than "..PoeticTurnIn.price.." Poetics... Heading to Poetic vendor to purchase "..PoeticTurnIn.itemName..".")
         State = CharacterState.goToPoeticTurnIn
-    elseif Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price then
+    elseif Settings.spendOrangeG and Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price then
         Logger("More than "..ScripTurnIn.Orange.price.." Orange Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Orange.itemName..".")
         State = CharacterState.goToScripTurnIn
-    elseif Inventory.GetItemCount(ScripTurnIn.Purple[1].itemId) < 999 and Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[1].price then
+    elseif Settings.spendPurpleG and Inventory.GetItemCount(ScripTurnIn.Purple[1].itemId) < 999 and Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[1].price then
         Logger("Less than 999 "..ScripTurnIn.Purple[1].itemName.." and more than"..ScripTurnIn.Purple[1].price" Purple Gatherer's Scrips... Heading to Scrip vendor.")
         State = CharacterState.goToScripTurnIn
-    elseif Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price then
+    elseif Settings.spendPurpleG and Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price then
         Logger("More than "..ScripTurnIn.Purple[2].price.." Purple Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Purple[2].itemName..".")
         State = CharacterState.goToScripTurnIn
     elseif Inventory.GetItemCount(PoeticTurnIn.itemId) >= 0 then
