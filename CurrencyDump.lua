@@ -30,6 +30,8 @@ eventually spend other currencies on stuff too.
 - spend OCS and PCS
 - spend bicolor on vouchers
 - eventually offload goblinol and then buy G6DM with the proceeds
+- somehow check if the appropriate quests to expand the scrip shop are complete
+  otherwise some of the indecies get outta whack
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
 ********************************************************************************
