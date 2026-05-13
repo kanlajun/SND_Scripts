@@ -1,10 +1,10 @@
 --[[
 ********************************************************************************
 *                  Currency Dump - Buy Goblinol and other things               *
-*                                Version 0.0.2                                 *
+*                                Version 0.0.3                                 *
 ********************************************************************************
 
-Created by: 
+Created by: kanlajun
 Based on: Dump Poetics by pot0to (https://ko-fi.com/pot0to)
 
 Description: Spends all your poetics on Goblinol, OGS on Mount Tokens, buys up
@@ -16,12 +16,20 @@ eventually spend other currencies on stuff too.
 ********************************************************************************
 1. vnavmesh
 2. Lifestream
+3. YesAlready (enable Bothers->Shops->ShopExchangeItemDialog)
 
 ********************************************************************************
 *                                Change Log                                    *
 ********************************************************************************
-0.0.2 - spend allied and centurios
+0.0.3 - allied and centurios is fairly stable...ish?
+0.0.2 - initial allied and centurios spending
 0.0.1 - initial commits
+********************************************************************************
+*                                Change Log                                    *
+********************************************************************************
+- spend OCS and PCS
+- spend bicolor on vouchers
+- eventually offload goblinol and then buy G6DM with the proceeds
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
 ********************************************************************************
@@ -227,7 +235,6 @@ function GoToScripTurnIn()
 end
 
 function SpendAllied()
-    _LOGGER("WIP spend allied")
     local allied    = Inventory.GetItemCount(Currency.AlliedSeals)
     local itemCount = Inventory.GetItemCount(AlliedTurnIn.itemId)
     local needed    = 999 - itemCount
@@ -266,7 +273,6 @@ function SpendAllied()
 end
 
 function SpendCenturio()
-    _LOGGER("WIP spend centurio")
     local centurio  = Inventory.GetItemCount(Currency.CenturioSeals)
     local itemCount = Inventory.GetItemCount(CenturioTurnIn.itemId)
     local needed    = 999 - itemCount
