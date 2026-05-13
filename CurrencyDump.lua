@@ -558,46 +558,95 @@ function QuestCheck()
         local id   = RequiredQuests[questIdx].id
 
         if not Quests.IsQuestComplete(id) then
-            Logger(name.." not completed.")
+            local zone  = RequiredQuests[questIdx].zone
+            local x     = RequiredQuests[questIdx].x
+            local y     = RequiredQuests[questIdx].y
+            local giver = RequiredQuests[questIdx].giver
+            safeSetFlagMapMarker(zone, x, y)
+            Logger(name.." not completed. Speak with "..giver.." at <flag> to accept.")
         else
             Logger(name.." is complete.")
         end
     end
 end
 
+function safeSetFlagMapMarker(territoryId, x, y)
+    territoryId = tonumber(territoryId)
+    x = tonumber(x)
+    y = tonumber(y)
+
+    if not territoryId or not x or not y then
+        return false
+    end
+
+    if not (Instances and Instances.Map and Instances.Map.Flag and Instances.Map.Flag.SetFlagMapMarker) then
+        return false
+    end
+
+    local ok = pcall(function()
+        Instances.Map.Flag:SetFlagMapMarker(territoryId, x, y)
+    end)
+
+    return ok
+end
+
 RequiredQuests = 
 {
     {
-        name = "Inscrutable Tastes",
-        id   = 67631
+        name  = "Inscrutable Tastes",
+        id    = 67631,
+        zone  = 418,
+        x     = -54.43,
+        y     = -38.10,
+        giver = "Morgayne"
     },
     {
-        name = "Go West, Craftsman",
-        id   = 67634
+        name  = "Go West, Craftsman",
+        id    = 67634,
+        zone  = 156,
+        x     = 45.61,
+        y     = -732.91,
+        giver = "Lydirlona"
     },
     {
         name = "Reach Long and Prosper",
-        id   = 68477
+        id   = 68477,
+        zone  = 635,
+        x     = -70.54,
+        y     = 64.38,
+        giver = "Galiena"
     },
     {
         name = "The Boutique Always Wins",
-        id   = 69139
-    },
-    {
-        name = "Inscrutable Tastes",
-        id   = 67631
+        id   = 69139,
+        zone  = 820,
+        x     = 12.985352,
+        y     = -25.22,
+        giver = "Mowen"
     },
     {
         name = "Expanding House of Splendors",
-        id   = 69711
+        id   = 69711,
+        zone  = 963,
+        x     = 24.22,
+        y     = -80.74,
+        giver = "Ofpilona"
     },
     {
         name = "Dawn of a New Deal",
-        id   = 70544
+        id   = 70544,
+        zone  = 1186,
+        x     = -157.64,
+        y     = -38.13,
+        giver = "Rhodina"
     },
     {
         name = "Mislaid Plans",
-        id   = 69384
+        id   = 69384,
+        zone  = 418,
+        x     = 151.48,
+        y     = 65.90,
+        giver = "Skysteel Engineer"
     }
 }
 
