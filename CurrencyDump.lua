@@ -619,6 +619,8 @@ function RefreshSettings()
 end
 
 function QuestCheck()
+    local numComplete = 0
+
     for questIdx = 1, #RequiredQuests do
         local name = RequiredQuests[questIdx].name
         local id   = RequiredQuests[questIdx].id
@@ -631,8 +633,16 @@ function QuestCheck()
             safeSetFlagMapMarker(zone, x, y)
             Logger(name.." not completed. Speak with "..giver.." at <flag> to accept.")
         else
+            numComplete = numComplete + 1
             Logger(name.." is complete.")
         end
+    end
+
+    if numComplete ~= #RequiredQuests then
+        local numMissing = #RequiredQuests - numComplete
+        Logger("There are "..numMissing.." scrip vendor expansions that are still locked. It is not safe to disable the Quest Check in the config until these are completed.")
+    else
+        Logger("All scrip vendor expansions are unlocked. It is safe to disable the Quest Check in the config.")
     end
 end
 
