@@ -19,6 +19,28 @@ configs:
       Will only perform this check and not spend any currencies until turned off.
       This is a safety mechanism to ensure that the correct items get pruchased.
     default: true
+  Spend Allied?:
+    description: Spend Allied Seals on Atheryte tickets
+    default: true
+  Spend Centurio?:
+    description: Spend Centurio Seals on Atheryte tickets
+    default: true
+  Aetheryte Ticket Cap:
+    description: Number of Atheryte Tickets to purchase up to
+    default: 999
+  Spend Poetics?:
+    description: Spend Allied Seals on Atheryte tickets
+    default: true
+  Spend Orange Gatherer Scrips?:
+    description: Spend Orange Gatherer Scrips on Mount Tokens
+    default: true
+  Spend Purple Gatherer Scrips?:
+    description: |
+      Spend Purple Gatherer Scrips on Hi-Cordials and then Guile Materia XI
+    default: true
+  Hi-Cordial Cap:
+    description: Number of Hi-Cordials to purchase up to
+    default: 999
 [[End Metadata]]
 --]=====]
 --[[
@@ -47,8 +69,15 @@ import("System.Numerics")
 _MACRO_LOG_TITLE = "CurrencyDump"
 
 Settings = {
-    logTitle   = "CurrencyDump",
-    questCheck = true
+    logTitle      = "CurrencyDump",
+    questCheck    = true,
+    spendAllied   = true,
+    spendCenturio = true,
+    ticketCap     = 999,
+    spendPoetics  = true,
+    spendOrangeG  = true,
+    spendPurpleG  = true,
+    hiCordialCap  = 999
 }  
 
 Currency = 
@@ -549,7 +578,44 @@ end
 
 function RefreshSettings()
     local questCheck = Config.Get("Quest Check?")
-    Settings.questCheck = questCheck
+    if questCheck ~= nil then
+        Settings.questCheck = questCheck
+    end
+
+    local spendAllied = Config.Get("Spend Allied?")
+    if spendAllied ~= nil then
+        Settings.spendAllied = spendAllied
+    end
+
+    local spendCenturio = Config.Get("Spend Centurio?")
+    if spendCenturio ~= nil then
+        Settings.spendCenturio = spendCenturio
+    end
+    
+    local ticketCap = Config.Get("Aetheryte Ticket Cap")
+    if type(ticketCap) == "number" then
+        Settings.ticketCap = ticketCap
+    end
+    
+    local spendPoetics = Config.Get("Spend Poetics?")
+    if spendPoetics ~= nil then
+        Settings.spendPoetics = spendPoetics
+    end
+
+    local spendOrangeG = Config.Get("Spend Orange Gatherer Scrips?")
+    if spendOrangeG ~= nil
+        Settings.spendOrangeG = spendOrangeG
+    end
+
+    local spendPurpleG = Config.Get("Spend Purple Gatherer Scrips?")
+    if spendPurpleG ~= nil
+        Settings.spendPurpleG = spendPurpleG
+    end
+    
+    local hiCordialCap = Config.Get("Hi-Cordial Cap")
+    if type(hiCordialCap) == "number" then
+        Settings.hiCordialCap = hiCordialCap
+    end
 end
 
 function QuestCheck()
