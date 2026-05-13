@@ -1,31 +1,36 @@
+--[=====[
+[[SND Metadata]]
+author: kanlajun
+version: 0.0.4
+description: |
+  Spends currencies on desired items
+  - Allied and Centurios on Aetheryte Tickets (up to 999)
+  - Poetics on Goblinol
+  - Orange Gatherer Scrips on Mount Tokens
+  - Purple Gatherer Scrips on Hi-Cordials (up to 999) then Guile Materia XI
+plugin_dependencies:
+- vnavmesh
+- Lifestream
+- YesAlready
+configs:
+  Quest Check?:
+    description: |
+      Will perform a quest completion check for quests that expand the scrip vendors.
+      Will only perform this check and not spend any currencies until turned off.
+      This is a safety mechanism to ensure that the correct items get pruchased.
+    default: true
+[[End Metadata]]
+--]=====]
 --[[
-********************************************************************************
-*                  Currency Dump - Buy Goblinol and other things               *
-*                                Version 0.0.3                                 *
-********************************************************************************
-
-Created by: kanlajun
-Based on: Dump Poetics by pot0to (https://ko-fi.com/pot0to)
-
-Description: Spends all your poetics on Goblinol, OGS on Mount Tokens, buys up
-to 999 Hi-Cordial with PGS, and then spends the rest on Guile Materia XI. Will
-eventually spend other currencies on stuff too. 
-
-********************************************************************************
-*                               Required Plugins                               *
-********************************************************************************
-1. vnavmesh
-2. Lifestream
-3. YesAlready (enable Bothers->Shops->ShopExchangeItemDialog)
-
 ********************************************************************************
 *                                Change Log                                    *
 ********************************************************************************
+0.0.4 - Scrip vendor quest check
 0.0.3 - allied and centurios is fairly stable...ish?
 0.0.2 - initial allied and centurios spending
 0.0.1 - initial commits
 ********************************************************************************
-*                                Change Log                                    *
+*                                  To-Do                                       *
 ********************************************************************************
 - spend OCS and PCS
 - spend bicolor on vouchers
@@ -40,6 +45,11 @@ eventually spend other currencies on stuff too.
 import("System.Numerics")
 
 _MACRO_LOG_TITLE = "CurrencyDump"
+
+Settings = {
+    logTitle   = "CurrencyDump"
+    questCheck = true
+}  
 
 Currency = 
 {
@@ -140,15 +150,16 @@ CenturioTurnIn = {
 SelectTurnInPage = false
 PurpleIndex = 1
 
-function _LOGGER(log_message)
-    local full_log_message = "[".._MACRO_LOG_TITLE.."] "..log_message
-    yield("/echo "..full_log_message)
-    Dalamud.Log(full_log_message)
+function Logger(logMessage)
+    local logTitle = Settings.logTitle
+    local fullLogMessage = "["..logTitle.."] "..logMessage
+    yield("/echo "..fullLogMessage)
+    Dalamud.Log(fullLogMessage)
 end
 
 function Teleport(aetheryteName, zoneId)
     yield("/li "..aetheryteName)
-    _LOGGER("Initiate Teleport")
+    Logger("Initiate Teleport")
 
     if zoneId == nil then
         while not Svc.Condition[CharacterCondition.betweenAreas] do
@@ -162,7 +173,7 @@ function Teleport(aetheryteName, zoneId)
             yield("/wait 1")
         end
     end
-    _LOGGER("Finished Teleport")
+    Logger("Finished Teleport")
 end
 
 function GoToAlliedTurnIn()
@@ -178,7 +189,7 @@ function GoToAlliedTurnIn()
         end
     elseif State ~= CharacterState.spendAllied then
         State = CharacterState.spendAllied
-        _LOGGER("Buying "..AlliedTurnIn.itemName.." with Allied Seals")
+        Logger("Buying "..AlliedTurnIn.itemName.." with Allied Seals")
     end
 end
 
@@ -196,7 +207,7 @@ function GoToCenturioTurnIn()
     elseif State ~= CharacterState.spendCenturio then
         yield("/wait 2")
         State = CharacterState.spendCenturio
-        _LOGGER("Buying "..CenturioTurnIn.itemName.." with Centurio Seals")
+        Logger("Buying "..CenturioTurnIn.itemName.." with Centurio Seals")
     end
 end
 
@@ -214,7 +225,7 @@ function GoToPoeticTurnIn()
         end
     elseif State ~= CharacterState.spendPoetics then
         State = CharacterState.spendPoetics
-        _LOGGER("Purchasing "..PoeticTurnIn.itemName.." from "..PoeticTurnIn.npcName)
+        Logger("Purchasing "..PoeticTurnIn.itemName.." from "..PoeticTurnIn.npcName)
     end
 end
 
@@ -232,7 +243,7 @@ function GoToScripTurnIn()
         end
     elseif State ~= CharacterState.spendOrange then
         State = CharacterState.spendOrange
-        _LOGGER("Purchasing items with Scrips")
+        Logger("Purchasing items with Scrips")
     end
 end
 
@@ -250,10 +261,10 @@ function SpendAllied()
             local centurio = Inventory.GetItemCount(Currency.CenturioSeals)
             if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
                 State = CharacterState.goToCenturioTurnIn
-                _LOGGER("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Centurio vendor.")
+                Logger("We still have less than 999 "..CenturioTurnIn.itemName.." and have more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Centurio vendor.")
             else
                 State = CharacterState.goToPoeticTurnIn
-                _LOGGER("Heading to Poetics vendor.")
+                Logger("Heading to Poetics vendor.")
             end
         end
         return
@@ -318,7 +329,7 @@ function SpendPoetics()
         else
             yield("/wait 3")
             State = CharacterState.goToScripTurnIn
-            _LOGGER("Nav to Scrip Exchange")
+            Logger("Nav to Scrip Exchange")
         end
         return
     end
@@ -347,7 +358,7 @@ function SpendOrange()
         else
             SelectTurnInPage = false
             State = CharacterState.spendPurple
-            _LOGGER("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+            Logger("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
         end
         return
     end
@@ -383,7 +394,7 @@ function SpendPurple()
             SelectTurnInPage = false
             PurpleIndex = 1
             State = CharacterState.sell
-            _LOGGER("WIP Selling "..PoeticTurnIn.itemName)
+            Logger("WIP Selling "..PoeticTurnIn.itemName)
         end
     elseif PurpleIndex == 1 then
 
@@ -399,7 +410,7 @@ function SpendPurple()
             else
                 SelectTurnInPage = false
                 PurpleIndex = PurpleIndex + 1
-                _LOGGER("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
+                Logger("WIP Buying "..ScripTurnIn.Purple[PurpleIndex].itemName)
             end
             return
         end
@@ -414,7 +425,7 @@ function SpendPurple()
             else
                 SelectTurnInPage = false
                 PurpleIndex = PurpleIndex + 1
-                _LOGGER("WIP Selling "..PoeticTurnIn.itemName)
+                Logger("WIP Selling "..PoeticTurnIn.itemName)
             end
             return
         end
@@ -467,7 +478,7 @@ function TurnIn()
 end
 
 function Sell()
-    _LOGGER("Sell "..PoeticTurnIn.itemName)
+    Logger("Sell "..PoeticTurnIn.itemName)
     
     local goblinol = Inventory.GetItemCount(PoeticTurnIn.itemId)
     if goblinol == 0 then
@@ -476,40 +487,40 @@ function Sell()
         else
             yield("/li auto")
             StopFlag = true
-            _LOGGER("WIP Buying G6DM")
+            Logger("WIP Buying G6DM")
         end
         return
     end
 
     yield("/li auto")
     StopFlag = true
-    _LOGGER("WIP Returning to home")
+    Logger("WIP Returning to home")
 end
 
 function Ready()
     if Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.AlliedSeals) > AlliedTurnIn.price then
-        _LOGGER("Less than 999 "..CenturioTurnIn.itemName.." and more than "..AlliedTurnIn.price.." Allied Seals... Heading to Allied Seals vendor.")
+        Logger("Less than 999 "..CenturioTurnIn.itemName.." and more than "..AlliedTurnIn.price.." Allied Seals... Heading to Allied Seals vendor.")
         State = CharacterState.goToAlliedTurnIn
     elseif Inventory.GetItemCount(CenturioTurnIn.itemId) < 999 and Inventory.GetItemCount(Currency.CenturioSeals) > CenturioTurnIn.price then
-        _LOGGER("Less than 999 "..CenturioTurnIn.itemName.." and more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Allied Seals vendor.")
+        Logger("Less than 999 "..CenturioTurnIn.itemName.." and more than "..CenturioTurnIn.price.." Centurio Seals... Heading to Allied Seals vendor.")
         State = CharacterState.goToCenturioTurnIn
     elseif Inventory.GetItemCount(Currency.Poetics) > PoeticTurnIn.price then
-        _LOGGER("More than "..PoeticTurnIn.price.." Poetics... Heading to Poetic vendor to purchase "..PoeticTurnIn.itemName..".")
+        Logger("More than "..PoeticTurnIn.price.." Poetics... Heading to Poetic vendor to purchase "..PoeticTurnIn.itemName..".")
         State = CharacterState.goToPoeticTurnIn
     elseif Inventory.GetItemCount(Currency.OrangeGathererScrip) > ScripTurnIn.Orange.price then
-        _LOGGER("More than "..ScripTurnIn.Orange.price.." Orange Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Orange.itemName..".")
+        Logger("More than "..ScripTurnIn.Orange.price.." Orange Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Orange.itemName..".")
         State = CharacterState.goToScripTurnIn
     elseif Inventory.GetItemCount(ScripTurnIn.Purple[1].itemId) < 999 and Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[1].price then
-        _LOGGER("Less than 999 "..ScripTurnIn.Purple[1].itemName.." and more than"..ScripTurnIn.Purple[1].price" Purple Gatherer's Scrips... Heading to Scrip vendor.")
+        Logger("Less than 999 "..ScripTurnIn.Purple[1].itemName.." and more than"..ScripTurnIn.Purple[1].price" Purple Gatherer's Scrips... Heading to Scrip vendor.")
         State = CharacterState.goToScripTurnIn
     elseif Inventory.GetItemCount(Currency.PurpleGathererScrip) > ScripTurnIn.Purple[2].price then
-        _LOGGER("More than "..ScripTurnIn.Purple[2].price.." Purple Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Purple[2].itemName..".")
+        Logger("More than "..ScripTurnIn.Purple[2].price.." Purple Gatherer's Scrips... Heading to Scrip vendor to purchase "..ScripTurnIn.Purple[2].itemName..".")
         State = CharacterState.goToScripTurnIn
     elseif Inventory.GetItemCount(PoeticTurnIn.itemId) >= 0 then
-        _LOGGER("We have some Goblinol... Heading to sell WIP.")
+        Logger("We have some Goblinol... Heading to sell WIP.")
         State = CharacterState.sell
     else
-        _LOGGER("Nothing to do...")
+        Logger("Nothing to do...")
         StopFlag = true
     end
 end
@@ -535,6 +546,60 @@ function GetDistanceToPoint(position)
     local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
     return distance
 end
+
+function RefreshSettings()
+    local questCheck = Config.Get("Quest Check?")
+    Settings.questCheck = questCheck
+end
+
+function QuestCheck()
+    for questIdx = 1, #RequiredQuests do
+        local name = RequiredQuests[questIdx].name
+        local id   = RequiredQuests[questIdx].id
+
+        if not Quests.IsQuestComplete(id) then
+            Logger(name.." not completed.")
+        else
+            Logger(name.." is complete.")
+        end
+    end
+end
+
+local RequiredQuests = 
+{
+    {
+        name = "Inscrutable Tastes",
+        id   = 67631
+    },
+    {
+        name = "Go West, Craftsman",
+        id   = 67634
+    },
+    {
+        name = "Reach Long and Prosper",
+        id   = 68477
+    },
+    {
+        name = "The Boutique Always Wins",
+        id   = 69139
+    },
+    {
+        name = "Inscrutable Tastes",
+        id   = 67631
+    },
+    {
+        name = "Expanding House of Splendors",
+        id   = 69711
+    },
+    {
+        name = "Dawn of a New Deal",
+        id   = 70544
+    },
+    {
+        name = "Mislaid Plans",
+        id   = 69384
+    }
+}
 
 CharacterCondition = {
     mounted=4,
@@ -575,10 +640,21 @@ CharacterState =
     turnIn             = TurnIn
 }
 
+--#region Main
+
+RefreshSettings()
 
 State = CharacterState.ready
 StopFlag = false
+
+if Settings.questCheck then
+    QuestCheck()
+    StopFlag = true
+end
+
 while not StopFlag do
     State()
     yield("/wait 0.1")
 end
+
+--#endregion Main
