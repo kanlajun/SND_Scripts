@@ -47,7 +47,7 @@ import("System.Numerics")
 _MACRO_LOG_TITLE = "CurrencyDump"
 
 Settings = {
-    logTitle   = "CurrencyDump"
+    logTitle   = "CurrencyDump",
     questCheck = true
 }  
 
@@ -565,7 +565,7 @@ function QuestCheck()
     end
 end
 
-local RequiredQuests = 
+RequiredQuests = 
 {
     {
         name = "Inscrutable Tastes",
